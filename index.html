@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2563eb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="중국 세금 계산기">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>중국 판매가·세금 계산기</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--bg:#f3f6fb;--card:#fff;--text:#111827;--muted:#6b7280;--line:#dbe2ea;--blue:#2563eb;--blue2:#1d4ed8;--soft:#eef4ff;--red:#dc2626;--green:#0f766e}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text)}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Apple SD Gothic Neo","Malgun Gothic",Arial,sans-serif;padding:max(16px,env(safe-area-inset-top)) 14px max(24px,env(safe-area-inset-bottom))}
+.app{width:min(100%,560px);margin:auto}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+h1{font-size:23px;margin:0}
+.lang{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 12px;font-weight:800}
+.intro{font-size:13px;color:var(--muted);line-height:1.55;margin:0 0 15px}
+.card{background:#fff;border:1px solid var(--line);border-radius:22px;overflow:hidden;box-shadow:0 14px 40px rgba(15,23,42,.08)}
+.section{padding:18px;border-bottom:1px solid var(--line)}
+.section:last-child{border:0}
+.field{margin-bottom:14px}
+.field:last-child{margin-bottom:0}
+label{display:flex;justify-content:space-between;gap:8px;margin-bottom:7px;font-size:14px;font-weight:800}
+.hint{font-size:11px;color:var(--muted);font-weight:500;text-align:right}
+.box{display:flex;align-items:center;overflow:hidden;border:1px solid var(--line);border-radius:14px;background:#fff}
+input,select{width:100%;min-width:0;height:52px;border:0;outline:0;background:transparent;padding:0 13px;font-size:17px;color:var(--text)}
+select{font-size:14px;font-weight:700}
+.unit{padding:0 13px;color:var(--muted);font-size:13px;font-weight:700;white-space:nowrap}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hidden{display:none!important}
+.actions{display:grid;grid-template-columns:1fr 100px;gap:10px}
+button{border:0;border-radius:14px;min-height:52px;font-size:16px;font-weight:800}
+.calc{background:var(--blue);color:#fff}
+.reset{background:#e5e7eb;color:#374151}
+.error{display:none;color:var(--red);font-size:13px;font-weight:800;margin-top:12px}
+.error.show{display:block}
+.result{display:none;background:var(--soft);padding:18px}
+.result.show{display:block}
+.main{text-align:center}
+.label{font-size:13px;color:var(--muted);font-weight:700}
+.big{font-size:38px;font-weight:900;color:var(--blue2);margin-top:4px}
+.sub{font-size:16px;font-weight:700;color:#374151;margin-top:3px}
+.badge{display:inline-block;margin-top:9px;padding:6px 10px;border-radius:999px;font-size:13px;font-weight:900}
+.exempt{background:#dcfce7;color:#166534}
+.taxed{background:#fee2e2;color:#991b1b}
+.details{display:grid;grid-template-columns:1fr auto;gap:11px 14px;margin-top:17px;padding-top:15px;border-top:1px solid #cbd9f6;font-size:14px}
+.k{color:var(--muted)} .v{text-align:right;font-weight:800}
+.note{margin-top:14px;padding:12px;border-radius:12px;background:rgba(255,255,255,.75);font-size:12px;line-height:1.55;color:var(--muted)}
+.install{margin-top:13px;padding:12px;border:1px dashed var(--line);background:#fff;border-radius:13px;color:var(--muted);font-size:12px;line-height:1.55}
+.install strong{color:var(--text)}
+@media(max-width:420px){.row{grid-template-columns:1fr}.big{font-size:33px}}
+</style>
+</head>
+<body>
+<main class="app">
+<div class="top">
+<h1 data-t="title">중국 판매가·세금 계산기</h1>
+<button id="lang" class="lang">中文</button>
+</div>
+<p class="intro" data-t="intro">품목별 중국 개인우편물 세금 규칙을 적용해 면세 여부, 예상세금, 최종 판매가를 자동 계산합니다.</p>
+
+<section class="card">
+<div class="section">
+<div class="field">
+<label><span data-t="category">품목 선택</span><span class="hint" data-t="categoryHint">세율 자동 적용</span></label>
+<div class="box">
+<select id="category">
+<option value="GENERAL" data-t="catGeneral">스킨·로션·크림·에센스·샴푸·린스·바디워시·선크림</option>
+<option value="MASK" data-t="catMask">마스크팩</option>
+<option value="MAKEUP" data-t="catMakeup">향수·립·쿠션·파우더·아이섀도·블러셔·마스카라</option>
+</select>
+</div>
+</div>
+
+<div class="field">
+<label><span data-t="rate">위안화 환율</span><span class="hint" data-t="rateHint">1위안당 원화</span></label>
+<div class="box"><input id="rate" type="number" inputmode="decimal" value="190" min="0.01"><span class="unit" data-t="rateUnit">원 / 1위안</span></div>
+</div>
+
+<div class="field">
+<label><span data-t="price">한국 상품 총가격</span><span class="hint" data-t="priceHint">구매한 전체 금액</span></label>
+<div class="box"><input id="price" type="number" inputmode="numeric" placeholder="20000" min="0"><span class="unit" data-t="won">원</span></div>
+</div>
+
+<div id="maskFields" class="field hidden">
+<label><span data-t="maskQty">마스크팩 수량</span><span class="hint" data-t="maskHint">장당 가격 자동 계산</span></label>
+<div class="box"><input id="maskQty" type="number" inputmode="numeric" value="10" min="1"><span class="unit" data-t="sheet">장</span></div>
+</div>
+
+<div id="makeupFields" class="field hidden">
+<label><span data-t="weight">총 중량</span><span class="hint" data-t="weightHint">내용물 기준 g</span></label>
+<div class="box"><input id="weight" type="number" inputmode="decimal" placeholder="15" min="0.01"><span class="unit">g</span></div>
+</div>
+
+<div class="row">
+<div class="field">
+<label><span data-t="margin">마진율</span><span class="hint" data-t="marginHint">목표 순이익</span></label>
+<div class="box"><input id="margin" type="number" inputmode="decimal" value="20" min="0"><span class="unit">%</span></div>
+</div>
+<div class="field">
+<label><span data-t="fee">수수료율</span><span class="hint" data-t="feeHint">플랫폼·결제</span></label>
+<div class="box"><input id="fee" type="number" inputmode="decimal" value="5" min="0" max="99.9"><span class="unit">%</span></div>
+</div>
+</div>
+
+<div class="field">
+<label><span data-t="shipping">배송비</span><span class="hint" data-t="shippingHint">원 또는 위안</span></label>
+<div class="box">
+<input id="shipping" type="number" inputmode="decimal" value="0" min="0">
+<select id="shippingCurrency" style="width:110px;border-left:1px solid var(--line)">
+<option value="KRW" data-t="krw">원</option>
+<option value="CNY" data-t="cny">위안</option>
+</select>
+</div>
+</div>
+
+<div class="actions">
+<button id="calc" class="calc" data-t="calculate">자동 계산</button>
+<button id="reset" class="reset" data-t="reset">초기화</button>
+</div>
+<div id="error" class="error"></div>
+</div>
+
+<div id="result" class="result">
+<div class="main">
+<div class="label" data-t="finalPrice">권장 최종 판매가</div>
+<div id="finalCny" class="big">¥0.00</div>
+<div id="finalKrw" class="sub">0원</div>
+<div id="taxBadge" class="badge exempt">면세</div>
+</div>
+
+<div class="details">
+<div class="k" data-t="declaredValue">세관 신고가액</div><div id="declared" class="v">¥0.00</div>
+<div class="k" data-t="unitPrice">단위 가격</div><div id="unitPrice" class="v">-</div>
+<div class="k" data-t="appliedRate">적용 세율</div><div id="taxRate" class="v">0%</div>
+<div class="k" data-t="taxAmount">예상 세금</div><div id="taxAmount" class="v">0원</div>
+<div class="k" data-t="feeAmount">예상 수수료</div><div id="feeAmount" class="v">0원</div>
+<div class="k" data-t="profit">예상 순이익</div><div id="profit" class="v">0원</div>
+<div class="k" data-t="actualMargin">실제 마진율</div><div id="actualMargin" class="v">0%</div>
+</div>
+<div id="ruleNote" class="note"></div>
+</div>
+</section>
+
+<div class="install" data-t="install"><strong>아이폰:</strong> Safari로 열고 공유 → 홈 화면에 추가를 누르면 앱처럼 사용할 수 있습니다.</div>
+</main>
+
+<script>
+const T={
+ko:{
+title:"중국 판매가·세금 계산기",intro:"품목별 중국 개인우편물 세금 규칙을 적용해 면세 여부, 예상세금, 최종 판매가를 자동 계산합니다.",
+category:"품목 선택",categoryHint:"세율 자동 적용",
+catGeneral:"스킨·로션·크림·에센스·샴푸·린스·바디워시·선크림",
+catMask:"마스크팩",catMakeup:"향수·립·쿠션·파우더·아이섀도·블러셔·마스카라",
+rate:"위안화 환율",rateHint:"1위안당 원화",rateUnit:"원 / 1위안",
+price:"한국 상품 총가격",priceHint:"구매한 전체 금액",won:"원",
+maskQty:"마스크팩 수량",maskHint:"장당 가격 자동 계산",sheet:"장",
+weight:"총 중량",weightHint:"내용물 기준 g",
+margin:"마진율",marginHint:"목표 순이익",fee:"수수료율",feeHint:"플랫폼·결제",
+shipping:"배송비",shippingHint:"원 또는 위안",krw:"원",cny:"위안",
+calculate:"자동 계산",reset:"초기화",finalPrice:"권장 최종 판매가",
+declaredValue:"세관 신고가액",unitPrice:"단위 가격",appliedRate:"적용 세율",
+taxAmount:"예상 세금",feeAmount:"예상 수수료",profit:"예상 순이익",actualMargin:"실제 마진율",
+install:"<strong>아이폰:</strong> Safari로 열고 공유 → 홈 화면에 추가를 누르면 앱처럼 사용할 수 있습니다.",
+exempt:"면세",taxed:"과세",
+errRate:"환율을 확인해 주세요.",errPrice:"상품 총가격을 입력해 주세요.",errQty:"마스크팩 수량을 입력해 주세요.",
+errWeight:"총 중량(g)을 입력해 주세요.",errRates:"마진율과 수수료율을 확인해 주세요.",
+generalRule:"일반 화장품: 신고가액이 250위안 이하이면 면세, 초과하면 20% 세율 적용.",
+maskRule:"마스크팩: 장당 최소 신고가 5위안. 신고가액 250위안 이하이면 면세. 장당 가격이 15위안 이상이면 50%, 그 미만이면 20% 적용.",
+makeupRule:"색조·향수류: 1g당 가격이 10위안 미만이면 신고가액 250위안 이하 면세, 초과 시 20%. 1g당 10위안 이상이면 50% 적용."
+},
+zh:{
+title:"中国销售价与税费计算器",intro:"根据商品类别自动判断免税、税率、预计税费和建议售价。",
+category:"商品类别",categoryHint:"自动应用税率",
+catGeneral:"水乳霜精华、洗发水、护发素、沐浴露、防晒",
+catMask:"面膜",catMakeup:"香水、口红唇釉、粉饼气垫、眼影腮红睫毛膏",
+rate:"人民币汇率",rateHint:"1元人民币等于多少韩元",rateUnit:"韩元 / 1元",
+price:"韩国商品总价",priceHint:"实际采购总金额",won:"韩元",
+maskQty:"面膜数量",maskHint:"自动计算单片价格",sheet:"片",
+weight:"总重量",weightHint:"净含量 g",
+margin:"利润率",marginHint:"目标净利润",fee:"手续费率",feeHint:"平台及支付",
+shipping:"运费",shippingHint:"韩元或人民币",krw:"韩元",cny:"人民币",
+calculate:"自动计算",reset:"重置",finalPrice:"建议最终售价",
+declaredValue:"海关申报价值",unitPrice:"单位价格",appliedRate:"适用税率",
+taxAmount:"预计税费",feeAmount:"预计手续费",profit:"预计净利润",actualMargin:"实际利润率",
+install:"<strong>iPhone：</strong>请用 Safari 打开，然后点击分享 → 添加到主屏幕。",
+exempt:"免税",taxed:"征税",
+errRate:"请确认汇率。",errPrice:"请输入商品总价。",errQty:"请输入面膜数量。",
+errWeight:"请输入总重量(g)。",errRates:"请确认利润率和手续费率。",
+generalRule:"一般化妆品：申报价值不超过250元免税，超过250元按20%计税。",
+maskRule:"面膜：海关最低申报价为5元/片。申报价值不超过250元免税。单片价格达到15元时按50%，低于15元按20%。",
+makeupRule:"彩妆及香水：每克单价低于10元时，申报价值不超过250元免税，超过按20%；每克单价达到10元时按50%。"
+}
+};
+const $=id=>document.getElementById(id);
+let lang=localStorage.getItem("calcLang")||"ko";
+function applyLang(){
+document.documentElement.lang=lang==="ko"?"ko":"zh-CN";
+document.querySelectorAll("[data-t]").forEach(el=>{
+const k=el.dataset.t;if(T[lang][k]!==undefined){if(k==="install")el.innerHTML=T[lang][k];else el.textContent=T[lang][k]}
+});
+$("lang").textContent=lang==="ko"?"中文":"한국어";
+localStorage.setItem("calcLang",lang);
+}
+function fmtK(v){return new Intl.NumberFormat(lang==="ko"?"ko-KR":"zh-CN",{maximumFractionDigits:0}).format(Math.round(v))+(lang==="ko"?"원":"韩元")}
+function fmtC(v){return "¥"+new Intl.NumberFormat("zh-CN",{minimumFractionDigits:2,maximumFractionDigits:2}).format(v)}
+function n(id){return Number($(id).value)}
+function showFields(){
+$("maskFields").classList.toggle("hidden",$("category").value!=="MASK");
+$("makeupFields").classList.toggle("hidden",$("category").value!=="MAKEUP");
+}
+function err(msg){$("error").textContent=msg;$("error").classList.add("show");$("result").classList.remove("show")}
+function calculate(){
+$("error").classList.remove("show");
+const cat=$("category").value,rate=n("rate"),price=n("price"),margin=n("margin")/100,fee=n("fee")/100,shippingInput=n("shipping");
+if(!rate||rate<=0)return err(T[lang].errRate);
+if(!Number.isFinite(price)||price<0||$("price").value==="")return err(T[lang].errPrice);
+if(margin<0||fee<0||fee>=1)return err(T[lang].errRates);
+const shippingKrw=$("shippingCurrency").value==="CNY"?shippingInput*rate:shippingInput;
+const actualPackageCny=price/rate;
+let declaredCny=actualPackageCny,taxRate=0,unitText="-",rule="",isExempt=false;
+
+if(cat==="GENERAL"){
+isExempt=declaredCny<=250;
+taxRate=isExempt?0:.20;
+rule=T[lang].generalRule;
+}else if(cat==="MASK"){
+const qty=n("maskQty");
+if(!qty||qty<=0)return err(T[lang].errQty);
+const actualUnit=actualPackageCny/qty;
+const declaredUnit=Math.max(actualUnit,5);
+declaredCny=declaredUnit*qty;
+isExempt=declaredCny<=250;
+taxRate=isExempt?0:(actualUnit>=15?.50:.20);
+unitText=`${fmtC(actualUnit)} / ${lang==="ko"?"장":"片"} (신고 ${fmtC(declaredUnit)})`;
+if(lang==="zh")unitText=`${fmtC(actualUnit)} / 片（申报 ${fmtC(declaredUnit)}）`;
+rule=T[lang].maskRule;
+}else{
+const weight=n("weight");
+if(!weight||weight<=0)return err(T[lang].errWeight);
+const perGram=actualPackageCny/weight;
+unitText=`${fmtC(perGram)} / g`;
+if(perGram>=10){isExempt=false;taxRate=.50}else{isExempt=declaredCny<=250;taxRate=isExempt?0:.20}
+rule=T[lang].makeupRule;
+}
+
+const taxKrw=declaredCny*rate*taxRate;
+const baseCost=price+shippingKrw+taxKrw;
+const finalKrw=baseCost*(1+margin)/(1-fee);
+const finalCny=finalKrw/rate;
+const feeKrw=finalKrw*fee;
+const profitKrw=finalKrw-feeKrw-baseCost;
+const actualMargin=(price+shippingKrw)>0?profitKrw/(price+shippingKrw)*100:0;
+
+$("finalCny").textContent=fmtC(finalCny);
+$("finalKrw").textContent=fmtK(finalKrw);
+$("declared").textContent=fmtC(declaredCny);
+$("unitPrice").textContent=unitText;
+$("taxRate").textContent=(taxRate*100).toFixed(0)+"%";
+$("taxAmount").textContent=`${fmtK(taxKrw)} (${fmtC(taxKrw/rate)})`;
+$("feeAmount").textContent=fmtK(feeKrw);
+$("profit").textContent=`${fmtK(profitKrw)} (${fmtC(profitKrw/rate)})`;
+$("actualMargin").textContent=actualMargin.toFixed(1)+"%";
+$("ruleNote").textContent=rule;
+const badge=$("taxBadge");
+badge.textContent=isExempt?T[lang].exempt:T[lang].taxed;
+badge.className="badge "+(isExempt?"exempt":"taxed");
+$("result").classList.add("show");
+localStorage.setItem("chinaTaxCalcV3",JSON.stringify({cat,rate,price,margin:n("margin"),fee:n("fee"),shipping:shippingInput,shippingCurrency:$("shippingCurrency").value,qty:n("maskQty"),weight:n("weight")}));
+}
+function resetAll(){
+$("category").value="GENERAL";$("rate").value=190;$("price").value="";$("maskQty").value=10;$("weight").value="";
+$("margin").value=20;$("fee").value=5;$("shipping").value=0;$("shippingCurrency").value="KRW";
+$("result").classList.remove("show");$("error").classList.remove("show");localStorage.removeItem("chinaTaxCalcV3");showFields();
+}
+function load(){
+try{const s=JSON.parse(localStorage.getItem("chinaTaxCalcV3"));if(!s)return;
+$("category").value=s.cat||"GENERAL";$("rate").value=s.rate??190;$("price").value=s.price??"";
+$("margin").value=s.margin??20;$("fee").value=s.fee??5;$("shipping").value=s.shipping??0;
+$("shippingCurrency").value=s.shippingCurrency||"KRW";$("maskQty").value=s.qty??10;$("weight").value=s.weight??"";
+}catch(e){}
+}
+$("category").addEventListener("change",showFields);
+$("calc").addEventListener("click",calculate);
+$("reset").addEventListener("click",resetAll);
+$("lang").addEventListener("click",()=>{lang=lang==="ko"?"zh":"ko";applyLang();if($("result").classList.contains("show"))calculate()});
+load();applyLang();showFields();
+if("serviceWorker"in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js").catch(()=>{}))}
+</script>
+</body>
+</html>
